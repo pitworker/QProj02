@@ -1,4 +1,10 @@
-let url = 'https://api.nytimes.com/svc/search/v2/articlesearch.json?fq=section_name:("obituaries")&api-key=V0EBG2jVRe3pyvAVaHism0lAAjADIExB';
+let url = 'https://api.nytimes.com/svc/search/v2/';
+let query = 'articlesearch.json?fq=section_name:("obituaries")';
+let keyQ = '&api-key=' + key;
+
+let getCMD = url + query + keyQ;
+
+console.log(getCMD);
 
 let graves = [];
 
@@ -16,7 +22,7 @@ function findName(h) {
 }
 
 function setup() {
-    let response = JSON.parse(getObits(url));
+    let response = JSON.parse(getObits(getCMD));
     console.log(response.response);
     for (let i = 0; i < response.response.docs.length; i++) {
         let r = response.response.docs[i];
