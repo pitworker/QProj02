@@ -60,7 +60,7 @@ function pullObits() {
 
     let candles = [];
 
-    //console.log(response.response);
+    console.log(response.response);
     for (let i = 0; i < response.response.docs.length; i++) {
         let r = response.response.docs[i];
         let candle = {
