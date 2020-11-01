@@ -13,11 +13,21 @@ const OCCUPATIONS = [
     "x"
 ];
 
+var aviationurl = "https://i.imgur.com/eTHCCwn.png"
+var arturl = "https://i.imgur.com/wK6PjWu.png"
+var businessurl = "https://i.imgur.com/nz0Y5fX.png"
+var educationurl = "https://i.imgur.com/Q67WbQG.png"
+var mediaurl = "https://i.imgur.com/Mg75pli.png"
+var medicalurl = "https://i.imgur.com/N2QFRsF.png"
+var serviceurl = "https://i.imgur.com/yAUNJZa.png"
+var technologyurl = "https://i.imgur.com/6222Qav.png"
+var lawurl = "https://i.imgur.com/9jHFSHn.png"
+
 const SHELF_MARGIN = 25;
 const LOWER_SHELF_Y = 600;
 const UPPER_SHELF_Y = 300;
 
-const NUM_CANDLES = 10;
+const NUM_CANDLES = 5;
 const CANDLES_PER_ROW = 5;
 const CANDLE_WIDTH = 60;
 const DATE_HEIGHT = 10;
@@ -145,6 +155,8 @@ function createCandles(n) {
             loc: {
                 x: SHELF_MARGIN + OFFSET_UNIT,
                 y: i < CANDLES_PER_ROW ? UPPER_SHELF_Y : LOWER_SHELF_Y
+                // x: 100,
+                // y: 300
             },
             candleHeight: Math.random()
                 * (CANDLE_HEIGHT_MAX - CANDLE_HEIGHT_MIN)
@@ -168,14 +180,23 @@ function createCandles(n) {
  * Draws the mark for the given occupation (o) at the given x and y positions
  */
 function drawMark(o,x,y) {
-    // TODO: Draw the mark for the given occupation
+    strokeWeight(2);
+    stroke(this.labelColor);
+    noFill();
+    image(aviationPng, x, height - y - MARK_HEIGHT);
+    // circle(x, height - y - MARK_HEIGHT, MARK_WIDTH);
+    // circle(x, height - y - MARK_HEIGHT, MARK_WIDTH * 0.5);
 }
 
 /*
  * Draws the given date (d) in the given x and y positions
  */
 function drawDate(d,x,y) {
-    // TODO: Draw the date based on the given inputs.
+    noStroke();
+    fill(this.labelColor);
+    textAlign(CENTER,BOTTOM);
+    textSize(8);
+    text('~' + d, x, height - y - DATE_HEIGHT);
 }
 
 /*
@@ -191,6 +212,11 @@ function drawFlame(h,x,y,c) {
 function drawCandle(c) {
     // TODO: Draw the candle that was input.
     //       this function should also call drawFlame, drawDate, and drawMark
+    fill(this.candleColor);
+    rect(c.loc.x, c.loc.y, CANDLE_WIDTH, CANDLE_HEIGHT_MAX);
+    drawMark(this.candles.ocptn, c.loc.x, c.loc.y);
+    // drawFlame(this.candles.height, c.loc.x, c.loc.y+100);
+    drawDate(this.candles.date, c.loc.x, c.loc.y);
 }
 
 /*
@@ -218,6 +244,22 @@ function drawShelves() {
 }
 
 /*
+ * p5 preload function. Preloads all the pngs. 
+ */
+function preload() {
+	aviationPng = loadImage(aviationurl);
+	artPng = loadImage(arturl);
+	businessPng = loadImage(businessurl);
+	educationPng = loadImage(educationurl);
+	mediaPng = loadImage(mediaurl);
+	medicalPng = loadImage(medicalurl);
+	servicePng = loadImage(serviceurl);
+	technologyPng = loadImage(technologyurl);
+	lawPng = loadImage(lawurl);
+	currentImageIndex = 0;
+}
+
+/*
  * p5 setup function. Called once on the instantiation of the canvas.
  */
 function setup() {
@@ -235,7 +277,10 @@ function setup() {
  */
 function draw() {
     background(this.bkgColor);
-
+    image(aviationPng, 20, 20);
+    image(artPng, 100, 100);
+    //resizing pngs to fit candle 
+    // aviationPng.resize(100, 0);
     drawStars();
     drawShelf();
     drawCandles();
