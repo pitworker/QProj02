@@ -13,31 +13,45 @@ const OCCUPATIONS = [
     "x"
 ];
 
-const SHELF_MARGIN = 25;
-const LOWER_SHELF_Y = 600;
-const UPPER_SHELF_Y = 300;
+var aviationurl = "https://i.imgur.com/eTHCCwn.png"
+var arturl = "https://i.imgur.com/wK6PjWu.png"
+var businessurl = "https://i.imgur.com/nz0Y5fX.png"
+var educationurl = "https://i.imgur.com/Q67WbQG.png"
+var mediaurl = "https://i.imgur.com/Mg75pli.png"
+var medicalurl = "https://i.imgur.com/N2QFRsF.png"
+var serviceurl = "https://i.imgur.com/yAUNJZa.png"
+var technologyurl = "https://i.imgur.com/6222Qav.png"
+var lawurl = "https://i.imgur.com/9jHFSHn.png"
 
-const NUM_CANDLES = 10;
-const CANDLES_PER_ROW = 5;
-const CANDLE_WIDTH = 60;
+const SHELF_MARGIN = 35;
+const LOWER_SHELF_Y = 850;
+const UPPER_SHELF_Y = 400;
+
+const NUM_CANDLES = 20;
+const CANDLES_PER_ROW = 10;
+const CANDLE_WIDTH = 100;
 const DATE_HEIGHT = 10;
-const MARK_HEIGHT = 40;
-const MARK_WIDTH = 20;
+const MARK_HEIGHT = 60; //circular stamps dimensions 
+const MARK_WIDTH = 60;
+const RIBBON_HEIGHT = 100; //ribbon stamps dimensions 
+const RIBBON_WIDTH = 100;
 const WICK_LENGTH = 15;
-const CANDLE_HEIGHT_MIN = 80;
-const CANDLE_HEIGHT_MAX = 120;
+const CANDLE_HEIGHT_MIN = 120;
+const CANDLE_HEIGHT_MAX = 260;
 
 const NUM_STARS = 25;
 const STAR_RADIUS = [5,10];
 const STAR_POINTS = [4,12];
 
-const CARD_CANDLE_WIDTH = CANDLE_WIDTH * 2;
-const CARD_CANDLE_HEIGHT_MIN = CANDLE_HEIGHT_MIN * 2;
-const CARD_CANDLE_HEIGHT_MAX = CANDLE_HEIGHT_MAX * 2;
-const CARD_DATE_HEIGHT = DATE_HEIGHT * 2;
-const CARD_MARK_HEIGHT = MARK_HEIGHT * 2;
-const CARD_MARK_WIDTH = MARK_WIDTH * 2;
-const CARD_WICK_LENGTH = WICK_LENGTH * 2;
+const CARD_CANDLE_WIDTH = CANDLE_WIDTH * 1.5;
+const CARD_CANDLE_HEIGHT_MIN = CANDLE_HEIGHT_MIN * 1.5;
+const CARD_CANDLE_HEIGHT_MAX = CANDLE_HEIGHT_MAX * 1.5;
+const CARD_DATE_HEIGHT = DATE_HEIGHT * 1.5;
+const CARD_MARK_HEIGHT = MARK_HEIGHT * 1.5; //circular stamps new dimensions 
+const CARD_MARK_WIDTH = MARK_WIDTH * 1.5;
+const CARD_RIBBON_HEIGHT = RIBBON_HEIGHT * 1.5; //ribbon stamp dimensions 
+const CARD_RIBBON_WIDTH = RIBBON_WIDTH * 1.5; 
+const CARD_WICK_LENGTH = WICK_LENGTH * 1.5;
 
 const CARD_MARGIN = 100;
 let CANDLE_CARD;
@@ -217,8 +231,32 @@ function drawMark(o,x,y,m) {
     strokeWeight(2);
     stroke(this.labelColor);
     noFill();
-    circle(x, y - markHeight, markWidth);
-    circle(x, y - markHeight, markWidth * 0.5);
+    imageMode(CENTER);
+    image(aviationPng, x, y - markHeight*2, markHeight, markWidth);
+    // aviationPng.resize(60, 0);
+    // image(artPng, x, y - markHeight * 2);
+    // artPng.resize(60, 0);
+    // image(businessPng, x, y - markHeight * 2);
+    // businessPng.resize(60, 0);
+    // image(educationPng, x, y - markHeight * 2);
+    // educationPng.resize(60, 0);
+    // image(mediaPng, x, y - markHeight * 1.5, markHeight, markWidth);
+    // mediaPng.resize(100, 0);
+    // image(medicalPng, x, y - markHeight * 1.5);
+    // medicalPng.resize(100, 0);
+    // image(servicePng, x, y - markHeight * 1.5);
+    // servicePng.resize(106, 0);
+    // image(technologyPng, x, y - markHeight * 1.5);
+    // technologyPng.resize(100, 0);
+    // image(lawPng, x, y - markHeight * 2);
+    // lawPng.resize(60, 0);
+    // for (let i = 0; i < 9; i++){
+    //     if (i % 2 == 0){
+    //         image(aviationPng, x , y - markHeight*2);
+    //         aviationPng.resize(60, 0);
+    //     } else {}
+    // }
+
 }
 
 /*
@@ -376,7 +414,7 @@ function drawCandleCard(c) {
     drawCandle(modifiedCandle(this.candles[c],
                               this.CANDLE_CARD[0].x
                               + (this.CANDLE_CARD[1].x - this.CANDLE_CARD[0].x) / 2,
-                              this.CANDLE_CARD[1].y - CARD_MARGIN,
+                              (this.CANDLE_CARD[1].y) - CARD_MARGIN,
                               map(this.candles[c].height,
                                   CANDLE_HEIGHT_MIN,
                                   CANDLE_HEIGHT_MAX,
@@ -436,6 +474,22 @@ function drawCard(c) {
 
     drawCandleCard(c);
     drawBackArrow(c);
+}
+
+/*
+ * p5 preload function. Preloads all the pngs. 
+ */
+function preload() {
+    aviationPng = loadImage(aviationurl);
+    artPng = loadImage(arturl);
+    businessPng = loadImage(businessurl);
+    educationPng = loadImage(educationurl);
+    mediaPng = loadImage(mediaurl);
+    medicalPng = loadImage(medicalurl);
+    servicePng = loadImage(serviceurl);
+    technologyPng = loadImage(technologyurl);
+    lawPng = loadImage(lawurl);
+    currentImageIndex = 0;
 }
 
 /*
