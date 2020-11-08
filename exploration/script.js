@@ -97,7 +97,10 @@ const OCCUPATION_KEYS = {
     "horse",
     "baseball",
     "cricket",
-    "sport"
+    "sport",
+    "tv",
+    "show",
+    "broadway"
   ],
   medical: [
     "medicine",
@@ -326,7 +329,8 @@ function findAge(a) {
  */
 function containsSubject(a,w) {
   for (let i = 0; i < a.keywords.length; i++) {
-    if (a.keywords[i].name == "subject" && a.keywords[i].value.includes(w)) {
+    if (a.keywords[i].name == "subject"
+        && a.keywords[i].value.toLowerCase().includes(w)) {
       return true;
     }
   }
@@ -344,15 +348,13 @@ function findOcptn(a) {
     }
     for (let j = 0; j < OCCUPATION_KEYS[o].length; j++) {
       let w = OCCUPATION_KEYS[o][j];
-      if (a.headline.main.includes(w) || a['abstract'].includes(w) || containsSubject(a,w)) {
+      if (a.headline.main.toLowerCase().includes(w)
+          || a['abstract'].toLowerCase().includes(w)
+          || containsSubject(a,w)) {
         return o;
       }
     }
   }
-
-  return Object.keys(OCCUPATIONS)[
-    Math.floor(Math.random() * Object.keys(OCCUPATIONS).length)
-  ];
 }
 
 /*
@@ -413,15 +415,15 @@ function makeCandles(rs) {
     console.log("r[" + i + "]");
     console.log(r);
 
-    if(thisMonth != r.pub_date.substring(0,7)) {
-      monthStart = 0;
-      thisMonth = r.pub_date.substring(0,7);
-    } else {
-      monthStart++;
-    }
-
     let name = findName(r);
     if (name != null) {
+      if(thisMonth != r.pub_date.substring(0,7)) {
+        monthStart = 0;
+        thisMonth = r.pub_date.substring(0,7);
+      } else {
+        monthStart++;
+      }
+
       let age = findAge(r);
       let ocptn = findOcptn(r);
       let geo = findGeo(r);
@@ -729,7 +731,7 @@ function drawCandle(c,m) {
 function drawCandles(m) {
   let drawnCandles = 0;
   for (let i = 0;  i < this.candles.length; i++) {
-    if (drawnCandles > NUM_CANDLES) break;
+    if (drawnCandles >= NUM_CANDLES) break;
 
     let date = this.candles[i].date;
     let mon = Number(date.substring(0,4)) * 100 + Number(date.substring(5,7));
