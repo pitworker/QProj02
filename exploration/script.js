@@ -1,5 +1,5 @@
 let url = 'https://api.nytimes.com/svc/search/v2/';
-let query = 'articlesearch.json?fq=section_name:("obituaries")';
+let query = 'articlesearch.json?fq=section_name:("obituaries") AND subject:("Coronavirus (2019-nCoV)")&sort=oldest&page=';
 let keyQ = '&api-key=' + key;
 
 let covidURL = 'https://api.covidtracking.com/v1/us/daily.json';
@@ -23,6 +23,177 @@ const OCCUPATIONS = {
   religion: "http://img1.wikia.nocookie.net/__cb20091122220338/bionicle/es/images/c/ce/Takanuva_%29.jpg",
   x: "http://images2.wikia.nocookie.net/__cb20110228194246/random-ness/images/a/a8/Clipart_21.gif"
 };
+const OCCUPATION_KEYS = {
+  aviation: [
+    "pilot",
+    "steward",
+    "stewardess",
+    "airplane",
+    "plane",
+    "helicopter",
+    "astronaut",
+    "space",
+    "nasa"
+  ],
+  art: [
+    "artist",
+    "art",
+    "sculptor",
+    "painter",
+    "maker",
+    "designer",
+    "architect",
+    "creator",
+    "sculpture",
+    "painting"
+  ],
+  business: [
+    "finance",
+    "business",
+    "businessperson",
+    "founder",
+    "businessman",
+    "businesswoman",
+    "banker",
+    "bank",
+    "mogul"
+  ],
+  education: [
+    "teacher",
+    "professor",
+    "headmaster",
+    "educator",
+    "education",
+    "school",
+    "college",
+    "university",
+    "coach"
+  ],
+  media: [
+    "singer",
+    "dance",
+    "filmmaker",
+    "actor",
+    "editor",
+    "director",
+    "camera",
+    "movie",
+    "music",
+    "song",
+    "video",
+    "film",
+    "emmy",
+    "grammy",
+    "tony",
+    "academy award",
+    "game",
+    "model",
+    "fashion",
+    "soccer",
+    "football",
+    "basketball",
+    "olympics",
+    "swim",
+    "horse",
+    "baseball",
+    "cricket",
+    "sport"
+  ],
+  medical: [
+    "medicine",
+    "doctor",
+    "hospital",
+    "surgeon",
+    "cure",
+    "medical",
+    "clinic",
+    "pharmacist",
+    "therapist",
+    "dentist",
+    "psychiatrist",
+    "psychologist",
+    "drug",
+    "treatment",
+    "physician",
+    "nurse"
+  ],
+  service: [
+    "waiter",
+    "waitress",
+    "cashier",
+    "custodian",
+    "janitor",
+    "server",
+    "delivery",
+    "chef",
+    "cook",
+    "food",
+    "hospitality",
+    "teller",
+    "plumber",
+    "mechanic",
+    "electrician"
+  ],
+  technology: [
+    "researcher",
+    "inventor",
+    "scientist",
+    "computer",
+    "algorithm",
+    "technology",
+    "nobel prize",
+    "computer",
+    "system"
+  ],
+  law: [
+    "lawyer",
+    "judge",
+    "politician",
+    "police",
+    "president",
+    "senator",
+    "representative",
+    "congress",
+    "law",
+    "attorney",
+    "justice",
+    "political",
+    "activist",
+    "mayor",
+    "delegate",
+    "ambassador",
+    "secretery",
+    "legislation",
+    "legislator",
+    "legislature",
+    "parliament"
+  ],
+  religion: [
+    "priest",
+    "pastor",
+    "church",
+    "temple",
+    "imam",
+    "rabbi",
+    "religious",
+    "monk",
+    "missionary",
+    "judaism",
+    "christianity",
+    "islam",
+    "buddhism",
+    "bible",
+    "god",
+    "prophet",
+    "hinduism",
+    "sikh",
+    "nun",
+    "catholic",
+    "evangelical",
+    "orthadox"
+  ],
+  x: []
+}
 
 let occupationImages = {};
 
@@ -74,8 +245,14 @@ let shelfColor;
 let stars;
 
 let card;
+let mon;
 
 let deaths;
+
+let obitRes;
+let covidRes;
+
+let allObits;
 
 /*
  * Makes an API request with the given URL (url)
@@ -112,9 +289,10 @@ function findName(a) {
     return p.substring(i + 2, j) + p.substring(0,i);
   }
 
-  let h = a.headline.main;
-  let i = h.indexOf(',');
-  return h.substring(0,i);
+  //let h = a.headline.main;
+  //let i = h.indexOf(',');
+  //return h.substring(0,i);
+  return null;
 }
 
 /*
@@ -125,13 +303,53 @@ function findAge(a) {
 
   let age = h.match(/\d+/);
 
+  if (age == "" || age == null || age == NaN || age == undefined) {
+    let p = findPerson(a);
+    let i = p != null ? p.indexOf('(') : null;
+    let j = p != null ? p.indexOf('-') : null;
+    let k = p != null ? p.indexOf(')') : null;
+
+    if (p != null && i > -1 && j > i && k > j
+        && Number(p.substring(j+1, k)) != NaN
+        && Number(p.substring(i+1, j)) != NaN) {
+      age = Number(p.substring(j+1, k)) - Number(p.substring(i+1, j));
+    } else {
+      age = 72; //If can't determine age, assume average life expectency
+    }
+  }
+
   return age;
+}
+
+/*
+ * Checks if the given article (a) contains the given subject keyword (w)
+ */
+function containsSubject(a,w) {
+  for (let i = 0; i < a.keywords.length; i++) {
+    if (a.keywords[i].name == "subject" && a.keywords[i].value.includes(w)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /*
  * Extracts the occupation from the given article (a)
  */
 function findOcptn(a) {
+  for (let i = 0; i < Object.keys(OCCUPATIONS).length; i++) {
+    let o = Object.keys(OCCUPATIONS)[i];
+    if (o == 'x') {
+      return 'x';
+    }
+    for (let j = 0; j < OCCUPATION_KEYS[o].length; j++) {
+      let w = OCCUPATION_KEYS[o][j];
+      if (a.headline.main.includes(w) || a['abstract'].includes(w) || containsSubject(a,w)) {
+        return o;
+      }
+    }
+  }
+
   return Object.keys(OCCUPATIONS)[
     Math.floor(Math.random() * Object.keys(OCCUPATIONS).length)
   ];
@@ -154,50 +372,98 @@ function findGeo(a) {
  * Pulls obituaries
  */
 function pullObits() {
+  let response = JSON.parse(getReq(url + query + 0 + keyQ));
+  this.obitRes = response.response;
+
+  let numPages = Math.floor(Number(response.response.meta.hits) / 10);
+
+  for (let i = 1; i <= numPages; i++) {
+    let prom = new Promise(function(resolve,reject) {
+      setTimeout(function() { resolve(i); }, Math.floor(i / 9) * 60000);
+    });
+
+    prom.then(function(i) {
+      console.log(url + query + i + keyQ);
+
+      let req = JSON.parse(getReq(url + query + i + keyQ));
+      console.log(req);
+
+      this.obitRes.docs = this.obitRes.docs
+        .concat(req.response.docs);
+      if (i == numPages - 1) this.allObits = 0;
+    });
+  }
+}
+
+/*
+ * Makes the candles based on the given obit response (rs).
+ */
+function makeCandles(rs) {
   const OFFSET_UNIT = (width - SHELF_MARGIN * 2) / (CANDLES_PER_ROW + 1);
   const CANDLE_START = SHELF_MARGIN + OFFSET_UNIT;
 
-  let response = JSON.parse(getReq(getCMD));
-
   let candles = [];
 
-  console.log(response.response);
-  response.response.docs = response.response.docs.concat(response.response.docs);
-  for (let i = 0; i < response.response.docs.length; i++) {
-    let r = response.response.docs[i];
+  let monthStart = 0;
+  let thisMonth = "";
+
+  for (let i = 0; i < rs.docs.length; i++) {
+    let r = rs.docs[i];
+
+    console.log("r[" + i + "]");
+    console.log(r);
+
+    if(thisMonth != r.pub_date.substring(0,7)) {
+      monthStart = 0;
+      thisMonth = r.pub_date.substring(0,7);
+    } else {
+      monthStart++;
+    }
+
     let name = findName(r);
-    let age = findAge(r);
-    let ocptn = findOcptn(r);
-    let geo = findGeo(r);
-    let candle = {
-      name: name,
-      age: age,
-      ocptn: ocptn,
-      loc: {
-        x: CANDLE_START + OFFSET_UNIT * (i % CANDLES_PER_ROW),
-        y: (height - SHELF_MARGIN * 2)
-          * (i < CANDLES_PER_ROW ? UPPER_SHELF_Y : LOWER_SHELF_Y)
-      },
-      height: (age / 100.0)
-        * (CANDLE_HEIGHT_MAX - CANDLE_HEIGHT_MIN)
-        + CANDLE_HEIGHT_MIN,
-      headline: r.headline,
-      content: r['abstract'],
-      date: r.pub_date.substring(0,10),
-      geo: geo,
-      url: r.web_url
-    };
-    candles.push(candle);
+    if (name != null) {
+      let age = findAge(r);
+      let ocptn = findOcptn(r);
+      let geo = findGeo(r);
+      let candle = {
+        name: name,
+        age: age,
+        ocptn: ocptn,
+        loc: {
+          x: CANDLE_START + OFFSET_UNIT * ((monthStart) % CANDLES_PER_ROW),
+          y: (height - SHELF_MARGIN * 2)
+            * (monthStart < CANDLES_PER_ROW ? UPPER_SHELF_Y : LOWER_SHELF_Y)
+        },
+        height: (age / 100.0)
+          * (CANDLE_HEIGHT_MAX - CANDLE_HEIGHT_MIN)
+          + CANDLE_HEIGHT_MIN,
+        headline: r.headline,
+        content: r['abstract'],
+        date: r.pub_date.substring(0,10),
+        geo: geo,
+        url: r.web_url
+      };
+      candles.push(candle);
+    }
   }
 
   this.candles = candles;
+  console.log("candles:");
+  console.log(this.candles);
 }
 
 /*
  * Pull the Covid Data
  */
 function pullCovid() {
-  let response = JSON.parse(getReq(covidURL));
+  this.covidRes = JSON.parse(getReq(covidURL));
+}
+
+/*
+ * Makes the covid death data based on the covid data response (rs)
+ */
+function makeCovid(rs) {
+  let response = rs;
   let deaths = [];
   let deathMax = 0;
   let deathMin = Number.MAX_SAFE_INTEGER;
@@ -243,6 +509,7 @@ function pullCovid() {
   }
 
   this.deaths = deaths;
+  console.log("deaths: ");
   console.log(this.deaths);
 }
 
@@ -457,11 +724,20 @@ function drawCandle(c,m) {
 }
 
 /*
- * Draws all the candles in the frame.
+ * Draws all the candles in the frame for the given month (m).
  */
-function drawCandles() {
+function drawCandles(m) {
+  let drawnCandles = 0;
   for (let i = 0;  i < this.candles.length; i++) {
-    drawCandle(this.candles[i],-1);
+    if (drawnCandles > NUM_CANDLES) break;
+
+    let date = this.candles[i].date;
+    let mon = Number(date.substring(0,4)) * 100 + Number(date.substring(5,7));
+
+    if (mon == m) {
+      drawCandle(this.candles[i],-1);
+      drawnCandles++;
+    } else if (mon > m) break;
   }
 }
 
@@ -678,6 +954,7 @@ function drawCard(c) {
  * p5 preload function. Preloads all the pngs.
  */
 function preload() {
+  this.allObits = -1;
   this.occupationImages = {
     aviation: loadImage(OCCUPATIONS.aviation),
     art: loadImage(OCCUPATIONS.art),
@@ -691,6 +968,8 @@ function preload() {
     religion: loadImage(OCCUPATIONS.religion),
     x: loadImage(OCCUPATIONS.x)
   };
+  pullObits();
+  pullCovid();
 }
 
 /*
@@ -699,34 +978,41 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
-  this.card = -1;
+  this.card = -2;
+  this.mon = 0;
 
   setColors();
   angleMode(DEGREES);
   createStars(NUM_STARS);
   setFrames();
-
-  pullObits();
-  pullCovid();
 }
 
 /*
  * p5 draw function. Called on canvas update (30hz).
  */
 function draw() {
-  background(this.bkgColor);
+  if (this.allObits == 0) {
+    makeCandles(this.obitRes);
+    makeCovid(this.covidRes);
+    this.allObits = 1;
+  } else if (this.allObits > 0) {
+    background(this.bkgColor);
 
-  drawStars();
+    drawStars();
 
-  if (this.card < 0) {
-    drawShelf((height - SHELF_MARGIN * 2) * LOWER_SHELF_Y);
-    drawShelf((height - SHELF_MARGIN * 2) * UPPER_SHELF_Y);
-    drawShelf((height - SHELF_MARGIN * 2) * GRAPH_Y);
-    drawCandles();
-    drawCovid();
-    highlightCovid();
-  } else {
-    drawCard(this.card);
+    if (this.card == -1) {
+      drawShelf((height - SHELF_MARGIN * 2) * LOWER_SHELF_Y);
+      drawShelf((height - SHELF_MARGIN * 2) * UPPER_SHELF_Y);
+      drawCandles(this.mon);
+      highlightCovid();
+      drawBackArrow(this.card);
+    } else if (this.card < -1) {
+      drawShelf((height - SHELF_MARGIN * 2) * GRAPH_Y);
+      drawCovid();
+      highlightCovid();
+    } else {
+      drawCard(this.card);
+    }
   }
 }
 
@@ -742,13 +1028,34 @@ function mouseClicked() {
   console.log(this.candles);
   console.log(this.card);
 
-  if (this.card < 0) {
+  if (this.card == -1) {
+    if (mX < this.BACK_BUTTON[1].x && mX > this.BACK_BUTTON[0].x
+        && mY < this.BACK_BUTTON[1].y && mY > this.BACK_BUTTON[0].y) {
+      this.card = -2;
+      this.mon = 0;
+      console.log('card: ' + this.card);
+    }
     for (let i = 0;  i < this.candles.length; i++) {
-      if (mX < this.candles[i].loc.x + CANDLE_WIDTH / 2
+      let date = this.candles[i].date;
+      let mon = Number(date.substring(0,4)) * 100 + Number(date.substring(5,7));
+
+      if (this.mon == mon
+          && mX < this.candles[i].loc.x + CANDLE_WIDTH / 2
           && mX > this.candles[i].loc.x - CANDLE_WIDTH / 2
           && mY < this.candles[i].loc.y
           && mY > this.candles[i].loc.y - this.candles[i].height) {
         this.card = i;
+        console.log('card: ' + this.card);
+      } else if (mon > this.mon) break;
+    }
+  } else if (this.card < -1) {
+    for(let i = 0; i < this.deaths.length; i++) {
+      let d = this.deaths[i];
+      const R = 4;
+      if (mX < d.loc.x + R && mX > d.loc.x - R
+          && mY < d.loc.y + R && mY > d.loc.y - R) {
+        this.card = -1;
+        this.mon = this.deaths[i].date;
         console.log('card: ' + this.card);
       }
     }
