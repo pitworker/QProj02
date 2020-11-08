@@ -1,0 +1,1 @@
+var key = 'YOUR NYTIMES API KEY HERE';
