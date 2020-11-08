@@ -33,7 +33,8 @@ const OCCUPATION_KEYS = {
     "helicopter",
     "astronaut",
     "space",
-    "nasa"
+    "nasa",
+    "air force"
   ],
   art: [
     "artist",
@@ -45,7 +46,9 @@ const OCCUPATION_KEYS = {
     "architect",
     "creator",
     "sculpture",
-    "painting"
+    "painting",
+    "write",
+    "wrote"
   ],
   business: [
     "finance",
@@ -56,7 +59,8 @@ const OCCUPATION_KEYS = {
     "businesswoman",
     "banker",
     "bank",
-    "mogul"
+    "mogul",
+    "company"
   ],
   education: [
     "teacher",
@@ -106,7 +110,9 @@ const OCCUPATION_KEYS = {
     "comedienne",
     "entertainer",
     "clown",
-    "humor"
+    "humor",
+    "radio",
+    "portray"
   ],
   medical: [
     "medicine",
