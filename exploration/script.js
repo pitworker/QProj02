@@ -100,7 +100,13 @@ const OCCUPATION_KEYS = {
     "sport",
     "tv",
     "show",
-    "broadway"
+    "broadway",
+    "comedy",
+    "comedian",
+    "comedienne",
+    "entertainer",
+    "clown",
+    "humor"
   ],
   medical: [
     "medicine",
@@ -169,7 +175,10 @@ const OCCUPATION_KEYS = {
     "legislation",
     "legislator",
     "legislature",
-    "parliament"
+    "parliament",
+    "embassy",
+    "statesman",
+    "stateswoman"
   ],
   religion: [
     "priest",
@@ -193,7 +202,10 @@ const OCCUPATION_KEYS = {
     "nun",
     "catholic",
     "evangelical",
-    "orthadox"
+    "orthodox",
+    "faith",
+    "preacher",
+    "minister"
   ],
   x: []
 }
@@ -201,9 +213,8 @@ const OCCUPATION_KEYS = {
 let occupationImages = {};
 
 const SHELF_MARGIN = 35;
-const UPPER_SHELF_Y = 1.0/3.0;
-const LOWER_SHELF_Y = 2.0/3.0;
-const GRAPH_Y = 1.0;
+const UPPER_SHELF_Y = 1.0/2.0;
+const LOWER_SHELF_Y = 1.0;
 
 const NUM_CANDLES = 20;
 const CANDLES_PER_ROW = 10;
@@ -433,7 +444,7 @@ function makeCandles(rs) {
         ocptn: ocptn,
         loc: {
           x: CANDLE_START + OFFSET_UNIT * ((monthStart) % CANDLES_PER_ROW),
-          y: (height - SHELF_MARGIN * 2)
+          y: (height - SHELF_MARGIN)
             * (monthStart < CANDLES_PER_ROW ? UPPER_SHELF_Y : LOWER_SHELF_Y)
         },
         height: (age / 100.0)
@@ -491,15 +502,12 @@ function makeCovid(rs) {
   }
 
   let xOffset = (width - SHELF_MARGIN * 2) / (deaths.length - 1);
-  let yOffset = (((height - SHELF_MARGIN * 2) * GRAPH_Y
-                  - (height - SHELF_MARGIN * 2) * LOWER_SHELF_Y)
-                 - SHELF_MARGIN)
-                / (deathMax - deathMin);
+  let yOffset = (height - SHELF_MARGIN * 2) / (deathMax - deathMin);
 
   for (let i = 0; i < deaths.length; i++) {
     deaths[i].loc = {
       x: SHELF_MARGIN + xOffset * i,
-      y: height - SHELF_MARGIN * 2 - yOffset * deaths[i].inc
+      y: height - SHELF_MARGIN  - yOffset * deaths[i].inc
     };
     deaths[i].star = {
       r: Math.random() * (STAR_RADIUS[1] - STAR_RADIUS[0])
@@ -1003,13 +1011,13 @@ function draw() {
     drawStars();
 
     if (this.card == -1) {
-      drawShelf((height - SHELF_MARGIN * 2) * LOWER_SHELF_Y);
-      drawShelf((height - SHELF_MARGIN * 2) * UPPER_SHELF_Y);
+      drawShelf((height - SHELF_MARGIN) * LOWER_SHELF_Y);
+      drawShelf((height - SHELF_MARGIN) * UPPER_SHELF_Y);
       drawCandles(this.mon);
       highlightCovid();
       drawBackArrow(this.card);
     } else if (this.card < -1) {
-      drawShelf((height - SHELF_MARGIN * 2) * GRAPH_Y);
+      drawShelf((height - SHELF_MARGIN));
       drawCovid();
       highlightCovid();
     } else {
@@ -1037,10 +1045,16 @@ function mouseClicked() {
       this.mon = 0;
       console.log('card: ' + this.card);
     }
+    let drawnCandles = 0;
     for (let i = 0;  i < this.candles.length; i++) {
+      if (drawnCandles >= NUM_CANDLES) break;
+
       let date = this.candles[i].date;
       let mon = Number(date.substring(0,4)) * 100 + Number(date.substring(5,7));
 
+      if (this.mon == mon) {
+        drawnCandles++;
+      }
       if (this.mon == mon
           && mX < this.candles[i].loc.x + CANDLE_WIDTH / 2
           && mX > this.candles[i].loc.x - CANDLE_WIDTH / 2
