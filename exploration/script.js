@@ -11,17 +11,17 @@ console.log(getCMD);
 let candles = [];
 
 const OCCUPATIONS = {
-  aviation: "https://i.imgur.com/eTHCCwn.png",
-  art: "https://i.imgur.com/wK6PjWu.png",
-  business: "https://i.imgur.com/nz0Y5fX.png",
-  education: "https://i.imgur.com/Q67WbQG.png",
-  media: "https://i.imgur.com/Mg75pli.png",
-  medical: "https://i.imgur.com/N2QFRsF.png",
-  service: "https://i.imgur.com/yAUNJZa.png",
-  technology: "https://i.imgur.com/6222Qav.png",
-  law: "https://i.imgur.com/9jHFSHn.png",
-  religion: "http://img1.wikia.nocookie.net/__cb20091122220338/bionicle/es/images/c/ce/Takanuva_%29.jpg",
-  x: "http://images2.wikia.nocookie.net/__cb20110228194246/random-ness/images/a/a8/Clipart_21.gif"
+  aviation: "https://i.imgur.com/CcSzCKt.png",
+  art: "https://i.imgur.com/hSDz9z5.png",
+  business: "https://i.imgur.com/ikHn7cA.png",
+  education: "https://i.imgur.com/Xy4lwr7.png",
+  media: "https://i.imgur.com/lCmkXLT.png",
+  medical: "https://i.imgur.com/qaNtkhr.png",
+  service: "https://i.imgur.com/bYbD6R7.png",
+  technology: "https://i.imgur.com/yoDlQOB.png",
+  law: "https://i.imgur.com/JkKy3Tm.png",
+  religion: "https://i.imgur.com/HihyS19.png",
+  x: "https://i.imgur.com/UtvW91n.png"
 };
 const OCCUPATION_KEYS = {
   aviation: [
@@ -216,20 +216,33 @@ const OCCUPATION_KEYS = {
   x: []
 }
 
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
+
 let occupationImages = {};
 
-const SHELF_MARGIN = 35;
+const SHELF_MARGIN = 75;
 const UPPER_SHELF_Y = 1.0/2.0;
 const LOWER_SHELF_Y = 1.0;
 
 const NUM_CANDLES = 20;
 const CANDLES_PER_ROW = 10;
-const CANDLE_WIDTH = 100;
+const CANDLE_WIDTH = 95;
 const DATE_HEIGHT = 10;
-const MARK_HEIGHT = 60;
-const MARK_WIDTH = 60;
-const RIBBON_HEIGHT = 100;
-const RIBBON_WIDTH = 100;
+const MARK_HEIGHT = 50;
+const MARK_WIDTH = 50;
 const WICK_LENGTH = 15;
 const CANDLE_HEIGHT_MIN = 120;
 const CANDLE_HEIGHT_MAX = 260;
@@ -238,21 +251,26 @@ const NUM_STARS = 25;
 const STAR_RADIUS = [5,10];
 const STAR_POINTS = [4,12];
 
+const TITLE_OFFSET = 25;
+const SUBTITLE_OFFSET = 60;
+const GRAPH_LABEL_OFFSET = 45;
+const BACK_BUTTON = [
+    {x: 25, y: 25},
+    {x: 45, y: 65}
+  ];
+
 const CARD_CANDLE_WIDTH = CANDLE_WIDTH * 1.5;
 const CARD_CANDLE_HEIGHT_MIN = CANDLE_HEIGHT_MIN * 1.5;
 const CARD_CANDLE_HEIGHT_MAX = CANDLE_HEIGHT_MAX * 1.5;
 const CARD_DATE_HEIGHT = DATE_HEIGHT * 1.5;
 const CARD_MARK_HEIGHT = MARK_HEIGHT * 1.5;
 const CARD_MARK_WIDTH = MARK_WIDTH * 1.5;
-const CARD_RIBBON_HEIGHT = RIBBON_HEIGHT * 1.5;
-const CARD_RIBBON_WIDTH = RIBBON_WIDTH * 1.5;
 const CARD_WICK_LENGTH = WICK_LENGTH * 1.5;
 
-const CARD_MARGIN = 100;
+const CARD_MARGIN = 200;
 let CANDLE_CARD;
 let OBIT_CARD;
 let LINK_BUTTON;
-let BACK_BUTTON;
 
 let candleColor;
 let bkgColor;
@@ -262,12 +280,16 @@ let labelColor;
 let starColor;
 let shelfColor;
 
+let fontReg;
+let fontIt;
+
 let stars;
 
 let card;
 let mon;
 
 let deaths;
+let deathMax;
 
 let obitRes;
 let covidRes;
@@ -456,6 +478,8 @@ function makeCandles(rs) {
         height: (age / 100.0)
           * (CANDLE_HEIGHT_MAX - CANDLE_HEIGHT_MIN)
           + CANDLE_HEIGHT_MIN,
+        flameColor: this.flameColor[Math.floor(Math.random()
+                                               * this.flameColor.length)],
         headline: r.headline,
         content: r['abstract'],
         date: r.pub_date.substring(0,10),
@@ -485,7 +509,7 @@ function makeCovid(rs) {
   let response = rs;
   let deaths = [];
   let deathMax = 0;
-  let deathMin = Number.MAX_SAFE_INTEGER;
+  let deathMin = 0;
 
   for (let i = response.length - 1; i >= 0; i--) {
     let death = {
@@ -502,13 +526,14 @@ function makeCovid(rs) {
     if (deathMax < deaths[i].inc) {
       deathMax = deaths[i].inc;
     }
-    if (deathMin > deaths[i].inc) {
-      deathMin = deaths[i].inc;
-    }
   }
 
+  deathMax = Math.ceil(deathMax / 10000.0) * 10000;
+  this.deathMax = deathMax;
+
   let xOffset = (width - SHELF_MARGIN * 2) / (deaths.length - 1);
-  let yOffset = (height - SHELF_MARGIN * 2) / (deathMax - deathMin);
+  let yOffset = (height - SHELF_MARGIN * 2 - SUBTITLE_OFFSET)
+      / (deathMax - deathMin);
 
   for (let i = 0; i < deaths.length; i++) {
     deaths[i].loc = {
@@ -577,21 +602,17 @@ function setColors() {
 function setFrames() {
   this.CANDLE_CARD = [
     {x: CARD_MARGIN, y: CARD_MARGIN},
-    {x: (windowWidth - CARD_MARGIN * 2) / 3 - CARD_MARGIN / 2,
+    {x: (windowWidth - CARD_MARGIN * 2) * 2 / 5 - CARD_MARGIN / 4,
      y: windowHeight - CARD_MARGIN}
   ];
   this.OBIT_CARD = [
-    {x: (windowWidth - CARD_MARGIN * 2) / 3 + CARD_MARGIN / 2,
+    {x: (windowWidth - CARD_MARGIN * 2) * 2 / 5 + CARD_MARGIN / 4,
      y: CARD_MARGIN},
     {x: windowWidth - CARD_MARGIN, y: windowHeight - CARD_MARGIN}
   ];
   this.LINK_BUTTON = [
     {x: this.OBIT_CARD[0].x, y: this.OBIT_CARD[1].y - 24},
     {x: this.OBIT_CARD[1].x, y: this.OBIT_CARD[1].y}
-  ];
-  this.BACK_BUTTON = [
-    {x: 25, y: 25},
-    {x: 115, y: 55}
   ];
 }
 
@@ -684,29 +705,33 @@ function drawMark(o,x,y,m) {
 function drawDate(d,x,y,m) {
   noStroke();
   fill(this.labelColor);
+  textFont(this.fontReg);
   textAlign(CENTER,BOTTOM);
-  textSize(8);
-  text('~' + d, x, y - (m < 0 ? DATE_HEIGHT : CARD_DATE_HEIGHT));
+  textSize(m < 0 ? 12 : 18);
+  text(d, x, y - (m < 0 ? DATE_HEIGHT : CARD_DATE_HEIGHT));
 }
 
 /*
  * Draws a flame with the given height (h), x and y positions, and color (c)
  * Assigns certain variables based on card mode (m).
  */
-function drawFlame(h,x,y,m) {
-  let bottom = y - h - (m < 0 ? WICK_LENGTH : CARD_WICK_LENGTH);
-  let top = bottom - h / 5;
+function drawFlame(h,x,y,c,m) {
+  let flameWidth = (m < 0 ? CANDLE_HEIGHT_MAX : CARD_CANDLE_HEIGHT_MAX) / 20;
+  let flameHeight = flameWidth * 4;
 
-  strokeWeight(2);
+  let bottom = y - h - (m < 0 ? WICK_LENGTH : CARD_WICK_LENGTH);
+  let top = bottom - flameHeight;
+
+  strokeWeight(1);
   stroke(this.labelColor);
-  fill(this.flameColor[2]);
+  fill(c);
   beginShape();
   vertex(x,bottom);
-  bezierVertex(x + h / 7, bottom,
-               x + h / 7, bottom - (bottom - top) / 2,
+  bezierVertex(x + flameWidth, bottom,
+               x + flameWidth, bottom - flameHeight / 2,
                x, top);
-  bezierVertex(x - h / 7, bottom - (bottom - top) / 2,
-               x - h / 7, bottom,
+  bezierVertex(x - flameWidth, bottom - flameHeight / 2,
+               x - flameWidth, bottom,
                x, bottom);
   endShape();
 }
@@ -716,7 +741,7 @@ function drawFlame(h,x,y,m) {
  * Assigns certain variables based on card mode (m).
  */
 function drawCandle(c,m) {
-  strokeWeight(2);
+  strokeWeight(1);
   stroke(this.shelfColor);
   noFill();
   line(c.loc.x,
@@ -724,7 +749,7 @@ function drawCandle(c,m) {
        c.loc.x,
        c.loc.y - c.height -  (m < 0 ? WICK_LENGTH : CARD_WICK_LENGTH));
 
-  strokeWeight(2);
+  strokeWeight(1);
   stroke(this.labelColor);
   fill(this.candleColor);
   rectMode(CORNER);
@@ -736,7 +761,7 @@ function drawCandle(c,m) {
   drawMark(c.ocptn, c.loc.x, c.loc.y, m);
   drawDate(c.date, c.loc.x, c.loc.y, m);
 
-  drawFlame(c.height, c.loc.x, c.loc.y, m);
+  drawFlame(c.height, c.loc.x, c.loc.y, c.flameColor, m);
 }
 
 /*
@@ -762,18 +787,68 @@ function drawCandles(m) {
  */
 function drawShelf(y) {
   stroke(this.shelfColor);
-  strokeWeight(5);
+  strokeWeight(1);
 
   line(SHELF_MARGIN, y,
        width - SHELF_MARGIN, y);
 }
 
 /*
+ * Draws the background grid and labels for the covid graph.
+ */
+function drawCovidGrid() {
+  let graphBottomAxis = height - SHELF_MARGIN;
+  let graphTopAxis = SUBTITLE_OFFSET + SHELF_MARGIN;
+  let yOffset = (graphBottomAxis - graphTopAxis)
+      / (this.deathMax / 10000);
+
+  noStroke();
+  fill(this.shelfColor);
+  textAlign(CENTER,CENTER);
+  textFont(this.fontIt);
+  textSize(12);
+  text("COVID Deaths", GRAPH_LABEL_OFFSET, graphTopAxis - 20);
+
+  for (let i = 0; i <= this.deathMax; i += 10000) {
+    let x = GRAPH_LABEL_OFFSET;
+    let y = graphBottomAxis - yOffset * (i / 10000);
+
+    noStroke();
+    fill(this.shelfColor);
+    textAlign(RIGHT,CENTER);
+    textFont(this.fontReg);
+    textSize(12);
+    text(i,x,y);
+
+    stroke(this.shelfColor);
+    strokeWeight(0.2);
+    noFill();
+    line(SHELF_MARGIN, y, width - SHELF_MARGIN, y);
+  }
+
+  for (let i = 0; i < this.deaths.length; i++) {
+    let d = this.deaths[i];
+    let month = stringMonth(d.date);
+    let c = month.indexOf(',');
+    let label = month.substring(0,c) + '\n' + month.substring(c + 1);
+
+    noStroke();
+    fill(this.shelfColor);
+    textAlign(CENTER,TOP);
+    textFont(this.fontReg);
+    textSize(12);
+    text(label,d.loc.x,height - GRAPH_LABEL_OFFSET);
+  }
+}
+
+/*
  * Draws a graph of covid deaths
  */
 function drawCovid() {
-  stroke(this.cardColor);
-  strokeWeight(3);
+  drawCovidGrid();
+
+  stroke(this.shelfColor);
+  strokeWeight(1);
   noFill();
   beginShape();
   for (let i = 0; i < this.deaths.length; i++) {
@@ -789,24 +864,60 @@ function drawCovid() {
 }
 
 /*
+ * Draws the title on bar on the page for the given card mode (c)
+ * and the month (m)
+ */
+function drawTitle(c,m) {
+  textAlign(CENTER,TOP);
+
+  textFont(this.fontReg);
+  textSize(32);
+  text("OBITUARIES", width / 2, TITLE_OFFSET);
+
+  if (c < -1) {
+    textFont(this.fontIt);
+    textSize(24);
+    text("Remembering those taken by COVID", width / 2, SUBTITLE_OFFSET);
+  } else if (c < 0) {
+    textFont(this.fontIt);
+    textSize(24);
+    text("Remembering those taken by COVID in " + stringMonth(m),
+         width / 2, SUBTITLE_OFFSET);
+  }
+}
+
+/*
+ * Takes in a month as a number (m) and returns it as a spelled out string
+ */
+function stringMonth(m) {
+  let year = Math.floor(m / 100);
+  let month = MONTHS[m % 100 - 1];
+  return month + ", " + year;
+}
+
+/*
  * Given a death (d), draws a label
  */
 function deathLabel(d) {
-  let label = 'DATE: ' + d.date
-      + '\nNEW DEATHS: ' + d.inc
-      + '\nTOTAL DEATHS: ' + d.total;
+  let date = stringMonth(d.date);
+  let label = 'MONTH - ' + date
+      + '\nNEW DEATHS - ' + d.inc
+      + '\nTOTAL DEATHS - ' + d.total;
 
+  noStroke();
+  fill(this.starColor);
+  textFont(this.fontReg);
   textAlign(LEFT,BOTTOM);
   textSize(16);
 
   rectMode(CORNER);
-  stroke(this.candleColor);
-  strokeWeight(3);
+  stroke(this.starColor);
+  strokeWeight(1);
   fill(this.cardColor);
-  rect(d.loc.x, d.loc.y, textWidth('TOTAL DEATHS: ' + d.total) + 20, -78)
+  rect(d.loc.x, d.loc.y, textWidth('TOTAL DEATHS - ' + d.total) + 20, -78)
 
   noStroke();
-  fill(this.candleColor);
+  fill(this.starColor);
   text(label, d.loc.x + 10, d.loc.y - 10);
 }
 
@@ -824,8 +935,8 @@ function highlightCovid() {
     if (mX < d.loc.x + R && mX > d.loc.x - R
         && mY < d.loc.y + R && mY > d.loc.y - R) {
       noStroke();
-      fill(this.flameColor[0]);
-      drawStar(d.loc.x, d.loc.y, d.star.r * 2, d.star.n, this.flameColor[4]);
+      fill(this.shelfColor);
+      drawStar(d.loc.x, d.loc.y, d.star.r * 2, d.star.n, this.shelfColor);
       deathLabel(d);
     }
   }
@@ -847,6 +958,7 @@ function modifiedCandle(c,x,y,h,w) {
     height: h,
     width: w,
     headline: c.headline,
+    flameColor: c.flameColor,
     content: c.content,
     date: c.date,
     geo: c.geo,
@@ -863,31 +975,20 @@ function drawBackArrow(c) {
   stroke(this.labelColor);
   strokeWeight(2);
   fill(this.cardColor);
-  rectMode(CORNERS);
-  rect(this.BACK_BUTTON[0].x, this.BACK_BUTTON[0].y,
-       this.BACK_BUTTON[1].x, this.BACK_BUTTON[1].y);
 
   noFill();
-  stroke(this.labelColor);
+  stroke(this.shelfColor);
   strokeWeight(2);
-  line(this.BACK_BUTTON[0].x + 10,
-       this.BACK_BUTTON[0].y
-       + (this.BACK_BUTTON[1].y - this.BACK_BUTTON[0].y) / 2,
-       this.BACK_BUTTON[1].x - 10,
-       this.BACK_BUTTON[0].y
-       + (this.BACK_BUTTON[1].y - this.BACK_BUTTON[0].y) / 2);
-  line(this.BACK_BUTTON[0].x + 10,
-       this.BACK_BUTTON[0].y
-       + (this.BACK_BUTTON[1].y - this.BACK_BUTTON[0].y) / 2,
-       this.BACK_BUTTON[0].x + 20,
-       this.BACK_BUTTON[0].y
-       + (this.BACK_BUTTON[1].y - this.BACK_BUTTON[0].y) / 2 - 10);
-  line(this.BACK_BUTTON[0].x + 10,
-       this.BACK_BUTTON[0].y
-       + (this.BACK_BUTTON[1].y - this.BACK_BUTTON[0].y) / 2,
-       this.BACK_BUTTON[0].x + 20,
-       this.BACK_BUTTON[0].y
-       + (this.BACK_BUTTON[1].y - this.BACK_BUTTON[0].y) / 2 + 10);
+  line(BACK_BUTTON[0].x,
+       BACK_BUTTON[0].y
+       + (BACK_BUTTON[1].y - BACK_BUTTON[0].y) / 2,
+       BACK_BUTTON[1].x,
+       BACK_BUTTON[0].y);
+  line(BACK_BUTTON[0].x,
+       BACK_BUTTON[0].y
+       + (BACK_BUTTON[1].y - BACK_BUTTON[0].y) / 2,
+       BACK_BUTTON[1].x,
+       BACK_BUTTON[1].y);
 }
 
 /*
@@ -905,7 +1006,7 @@ function drawCandleCard(c) {
                             this.CANDLE_CARD[0].x
                             + (this.CANDLE_CARD[1].x - this.CANDLE_CARD[0].x)
                             / 2,
-                            (this.CANDLE_CARD[1].y) - CARD_MARGIN,
+                            (this.CANDLE_CARD[1].y) - CARD_MARGIN / 4,
                             map(this.candles[c].height,
                                 CANDLE_HEIGHT_MIN,
                                 CANDLE_HEIGHT_MAX,
@@ -917,11 +1018,12 @@ function drawCandleCard(c) {
   fill(this.labelColor);
   rectMode(CORNER);
   textAlign(CENTER,TOP);
-  textSize(36);
+  textFont(this.fontReg);
+  textSize(24);
   textStyle(BOLD);
   text(this.candles[c].name,
        this.CANDLE_CARD[0].x,
-       this.CANDLE_CARD[0].y + CARD_MARGIN,
+       this.CANDLE_CARD[0].y + CARD_MARGIN / 4,
        this.CANDLE_CARD[1].x - this.CANDLE_CARD[0].x,
        CARD_MARGIN);
 }
@@ -940,23 +1042,23 @@ function drawCard(c) {
   fill(this.starColor);
   rectMode(CORNER);
   textAlign(LEFT,CENTER);
-  textSize(24);
-  textStyle(ITALIC);
-  text('"' + this.candles[c].content + '"',
+  textFont(this.fontReg);
+  textSize(20);
+  text(this.candles[c].content,
        this.OBIT_CARD[0].x,
        this.OBIT_CARD[0].y,
        this.OBIT_CARD[1].x - this.OBIT_CARD[0].x,
        this.OBIT_CARD[1].y - this.OBIT_CARD[0].y);
 
-  fill(this.cardColor);
+  fill(this.starColor);
   textAlign(LEFT,BOTTOM);
-  textSize(24);
-  textStyle(NORMAL);
+  textFont(this.fontReg);
+  textSize(20);
   text('READ FULL OBITUARY', this.LINK_BUTTON[0].x, this.LINK_BUTTON[1].y);
 
   noFill();
-  stroke(this.cardColor);
-  strokeWeight(2);
+  stroke(this.starColor);
+  strokeWeight(1);
   line(this.LINK_BUTTON[0].x, this.LINK_BUTTON[1].y,
        this.LINK_BUTTON[0].x + textWidth('READ FULL OBITUARY'),
        this.LINK_BUTTON[1].y);
@@ -984,6 +1086,8 @@ function preload() {
     religion: loadImage(OCCUPATIONS.religion),
     x: loadImage(OCCUPATIONS.x)
   };
+  this.fontReg = loadFont('type/Fleya-Trial-Light.otf');
+  this.fontIt = loadFont('type/Fleya-Trial-Light-Italic.otf');
   pullObits();
   pullCovid();
 }
@@ -996,11 +1100,19 @@ function setup() {
 
   this.card = -2;
   this.mon = 0;
+  this.deathMax = 0;
 
   setColors();
   angleMode(DEGREES);
   createStars(NUM_STARS);
   setFrames();
+
+  background(this.bkgColor);
+  drawStars();
+  textAlign(CENTER,CENTER);
+  textFont(this.fontIt);
+  textSize(32);
+  text("LOADING API DATA...", width / 2, height / 2);
 }
 
 /*
@@ -1016,6 +1128,8 @@ function draw() {
 
     drawStars();
 
+    drawTitle(this.card, this.mon);
+
     if (this.card == -1) {
       drawShelf((height - SHELF_MARGIN) * LOWER_SHELF_Y);
       drawShelf((height - SHELF_MARGIN) * UPPER_SHELF_Y);
@@ -1023,7 +1137,6 @@ function draw() {
       highlightCovid();
       drawBackArrow(this.card);
     } else if (this.card < -1) {
-      drawShelf((height - SHELF_MARGIN));
       drawCovid();
       highlightCovid();
     } else {
@@ -1045,8 +1158,8 @@ function mouseClicked() {
   console.log(this.card);
 
   if (this.card == -1) {
-    if (mX < this.BACK_BUTTON[1].x && mX > this.BACK_BUTTON[0].x
-        && mY < this.BACK_BUTTON[1].y && mY > this.BACK_BUTTON[0].y) {
+    if (mX < BACK_BUTTON[1].x && mX > BACK_BUTTON[0].x
+        && mY < BACK_BUTTON[1].y && mY > BACK_BUTTON[0].y) {
       this.card = -2;
       this.mon = 0;
       console.log('card: ' + this.card);
@@ -1082,8 +1195,8 @@ function mouseClicked() {
       }
     }
   } else {
-    if (mX < this.BACK_BUTTON[1].x && mX > this.BACK_BUTTON[0].x
-        && mY < this.BACK_BUTTON[1].y && mY > this.BACK_BUTTON[0].y) {
+    if (mX < BACK_BUTTON[1].x && mX > BACK_BUTTON[0].x
+        && mY < BACK_BUTTON[1].y && mY > BACK_BUTTON[0].y) {
       this.card = -1;
       console.log('card: ' + this.card);
     } else if (mX < this.LINK_BUTTON[1].x && mX > this.LINK_BUTTON[0].x
