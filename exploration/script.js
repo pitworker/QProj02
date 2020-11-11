@@ -241,7 +241,7 @@ const NUM_CANDLES = 20;
 const CANDLES_PER_ROW = 10;
 const CANDLE_WIDTH = 95;
 const DATE_HEIGHT = 10;
-const MARK_HEIGHT = 50;
+const MARK_HEIGHT = 35;
 const MARK_WIDTH = 50;
 const WICK_LENGTH = 15;
 const CANDLE_HEIGHT_MIN = 120;
@@ -251,15 +251,17 @@ const NUM_STARS = 25;
 const STAR_RADIUS = [5,10];
 const STAR_POINTS = [4,12];
 
+const BLINK_RATE = 0.05;
+
 const TITLE_OFFSET = 25;
 const SUBTITLE_OFFSET = 60;
 const GRAPH_LABEL_OFFSET = 45;
 const BACK_BUTTON = [
-    {x: 25, y: 25},
-    {x: 45, y: 65}
-  ];
+  {x: 25, y: 25},
+  {x: 45, y: 65}
+];
 
-const CARD_CANDLE_MULT = 1.5;
+const CARD_CANDLE_MULT = 1.35;
 const CARD_CANDLE_WIDTH = CANDLE_WIDTH * CARD_CANDLE_MULT;
 const CARD_CANDLE_HEIGHT_MIN = CANDLE_HEIGHT_MIN * CARD_CANDLE_MULT;
 const CARD_CANDLE_HEIGHT_MAX = CANDLE_HEIGHT_MAX * CARD_CANDLE_MULT;
@@ -546,7 +548,8 @@ function makeCovid(rs) {
         + STAR_RADIUS[0],
       n: map(Math.floor(Math.random() * 9),
              0, 9,
-             STAR_POINTS[0], STAR_POINTS[1])
+             STAR_POINTS[0], STAR_POINTS[1]),
+      b: {p: Math.random() * 6 - 4, d: Math.random() > 0.5 ? true : false}
     }
   }
 
@@ -696,7 +699,7 @@ function drawMark(o,x,y,m) {
   let markHeight = m < 0 ? MARK_HEIGHT : CARD_MARK_HEIGHT;
 
   imageMode(CENTER);
-  image(this.occupationImages[o], x, y - markHeight*2, markHeight, markWidth);
+  image(this.occupationImages[o], x, y - markHeight*2, markWidth, markWidth);
 }
 
 /*
@@ -860,7 +863,22 @@ function drawCovid() {
 
   for(let i = 0; i < this.deaths.length; i++) {
     let d = this.deaths[i];
-    drawStar(d.loc.x, d.loc.y, d.star.r, d.star.n, this.starColor);
+    drawStar(d.loc.x, d.loc.y,
+             d.star.r * (d.star.b.p < 1 ? 1 : d.star.b.p),
+             d.star.n,
+             this.starColor);
+
+    if (d.star.b.p >= 2) {
+      d.star.b.p -= BLINK_RATE;
+      d.star.b.d = false;
+    } else if (d.star.b.p <= -4) {
+      d.star.b.p += BLINK_RATE;
+      d.star.b.d = true;
+    } else if (d.star.b.d) {
+      d.star.b.p += BLINK_RATE;
+    } else {
+      d.star.b.p -= BLINK_RATE;
+    }
   }
 }
 
@@ -1044,7 +1062,7 @@ function drawCard(c) {
   rectMode(CORNER);
   textAlign(LEFT,CENTER);
   textFont(this.fontReg);
-  textSize(20);
+  textSize(24);
   text(this.candles[c].content,
        this.OBIT_CARD[0].x,
        this.OBIT_CARD[0].y,
