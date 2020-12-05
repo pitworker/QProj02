@@ -8,6 +8,11 @@ let getCMD = url + query + keyQ;
 
 console.log(getCMD);
 
+let loadingWidth;
+let frameCount;
+const FRAME_DELAY = 30;
+let minLeft;
+
 let candles = [];
 
 const OCCUPATIONS = {
@@ -432,9 +437,13 @@ function pullObits() {
       let req = JSON.parse(getReq(url + query + i + keyQ));
       console.log(req);
 
+      console.log("i: " + i + "\nnumPages: " + numPages);
+
       this.obitRes.docs = this.obitRes.docs
         .concat(req.response.docs);
       if (i == numPages - 1) this.allObits = 0;
+
+      this.minLeft = Math.floor(numPages / 9) - Math.floor(i / 9) - 1;
     });
   }
 }
@@ -1126,18 +1135,41 @@ function setup() {
   createStars(NUM_STARS);
   setFrames();
 
-  background(this.bkgColor);
-  drawStars();
-  textAlign(CENTER,CENTER);
+
   textFont(this.fontIt);
   textSize(32);
-  text("LOADING API DATA...", width / 2, height / 2);
+  this.loadingWidth = textWidth("LOADING API DATA");
+  this.frameCount = 0;
 }
 
 /*
  * p5 draw function. Called on canvas update (30hz).
  */
 function draw() {
+  if (this.allObits < 0) {
+    background(this.bkgColor);
+    drawStars();
+    
+    textAlign(LEFT,CENTER);
+    textFont(this.fontIt);
+    textSize(32);
+
+    text("LOADING API DATA" 
+         + (Math.floor(this.frameCount / FRAME_DELAY) > 2 ? " . . ." : 
+            Math.floor(this.frameCount / FRAME_DELAY) > 1 ? " . ." :
+            Math.floor(this.frameCount / FRAME_DELAY) > 0 ? " ." : ""), 
+         width / 2 - this.loadingWidth / 2, height / 2);
+
+    textAlign(CENTER,CENTER);
+    text((this.minLeft) + " minute" + (this.minLeft != 1 ? "s" : "") 
+         + " remaining", 
+         width / 2, height / 2 + 30);
+    if (this.frameCount < 4 * FRAME_DELAY) {
+      this.frameCount++
+    } else {
+      this.frameCount = 0;
+    }
+  }
   if (this.allObits == 0) {
     makeCandles(this.obitRes);
     makeCovid(this.covidRes);
