@@ -11,7 +11,7 @@ console.log(getCMD);
 let loadingWidth;
 let frameCount;
 const FRAME_DELAY = 30;
-let minLeft;
+let loadProgress;
 
 let candles = [];
 
@@ -426,9 +426,11 @@ function pullObits() {
 
   let numPages = Math.floor(Number(response.response.meta.hits) / 10);
 
+  this.loadProgress = 0;
+  
   for (let i = 1; i <= numPages; i++) {
     let prom = new Promise(function(resolve,reject) {
-      setTimeout(function() { resolve(i); }, Math.floor(i / 9) * 60000);
+      setTimeout(function() { resolve(i); }, i * 6000);
     });
 
     prom.then(function(i) {
@@ -443,7 +445,8 @@ function pullObits() {
         .concat(req.response.docs);
       if (i == numPages - 1) this.allObits = 0;
 
-      this.minLeft = Math.floor(numPages / 9) - Math.floor(i / 9) - 1;
+      this.loadProgress = (i+1) / numPages;
+      console.log(i+1 + ", " + numPages);
     });
   }
 }
@@ -1161,8 +1164,7 @@ function draw() {
          width / 2 - this.loadingWidth / 2, height / 2);
 
     textAlign(CENTER,CENTER);
-    text((this.minLeft) + " minute" + (this.minLeft != 1 ? "s" : "") 
-         + " remaining", 
+    text(Math.ceil(this.loadProgress * 100) + " percent loaded", 
          width / 2, height / 2 + 30);
     if (this.frameCount < 4 * FRAME_DELAY) {
       this.frameCount++
